@@ -14,9 +14,9 @@ client-to-client content inside them.
 | [`buf.yaml`](buf.yaml) | STANDARD lint and FILE-level breaking checks. |
 
 Client-to-client encrypted content belongs to
-[`obscura-native/protocol`](https://github.com/barrelmaker97/obscura-native/tree/main/protocol).
+[`obscura-native/protocol`](https://github.com/obscura-messaging/obscura-native/tree/main/protocol).
 The native/app facade belongs to
-[`obscura-native/docs`](https://github.com/barrelmaker97/obscura-native/tree/main/docs).
+[`obscura-native/docs`](https://github.com/obscura-messaging/obscura-native/tree/main/docs).
 Application routing and merge behavior belong to
 [`obscura-pix/docs/DOMAIN_CONTRACT.md`](https://github.com/rhelsing/obscura-pix/blob/main/docs/DOMAIN_CONTRACT.md).
 
