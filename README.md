@@ -18,7 +18,7 @@ Client-to-client encrypted content belongs to
 The native/app facade belongs to
 [`obscura-native/docs`](https://github.com/obscura-messaging/obscura-native/tree/main/docs).
 Application routing and merge behavior belong to
-[`obscura-pix/docs/DOMAIN_CONTRACT.md`](https://github.com/rhelsing/obscura-pix/blob/main/docs/DOMAIN_CONTRACT.md).
+[`obscura-pix/docs/DOMAIN_CONTRACT.md`](https://github.com/obscura-messaging/obscura-pix/blob/main/docs/DOMAIN_CONTRACT.md).
 
 ## Consumers
 
