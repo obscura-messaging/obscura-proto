@@ -10,7 +10,6 @@ client-to-client content inside them.
 |---|---|
 | [`obscura/v1/obscura.proto`](obscura/v1/obscura.proto) | REST message submission and gateway WebSocket frames. |
 | [`TRANSPORT.md`](TRANSPORT.md) | Normative server/native transport behavior. |
-| [`HISTORY.md`](HISTORY.md) | Non-normative transport migration record. |
 | [`buf.yaml`](buf.yaml) | STANDARD lint and FILE-level breaking checks. |
 
 Client-to-client encrypted content belongs to
