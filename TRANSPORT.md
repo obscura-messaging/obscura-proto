@@ -1,82 +1,55 @@
 # Transport contract
 
-This document is normative for `obscura-server` and `obscura-native`.
-`obscura/v1/obscura.proto` defines shape; this document defines behavior.
+Normative for `obscura-server` and `obscura-native`. [`obscura.proto`](obscura/v1/obscura.proto) defines the shapes; this file defines behaviour. The server queues, routes, timestamps and deletes encrypted client bytes, and MUST NOT parse their content. REST details are in the server's `openapi.yaml`.
 
-## Scope
+## Sending: `POST /v1/messages`
 
-The transport carries encrypted client bytes. The server may authenticate,
-queue, route, timestamp, and delete those bytes, but MUST NOT parse their
-client-to-client content.
+Body `SendMessageRequest`, response `SendMessageResponse`, both protobuf. Requires a device-scoped JWT.
 
-## Message submission
+- Each submission is encrypted separately for one target device. `submission_id` and `device_id` are 16-byte UUIDs; `message` must be non-empty.
+- `Idempotency-Key` (a UUID header) is required. A repeat within the server's idempotency TTL (default 24 h) returns the cached response.
+- Too many submissions (default limit 100) rejects the whole request with 413.
+- Otherwise failures are per submission in `failed_submissions`; an empty list means every submission was queued.
 
-`POST /v1/messages` accepts a `SendMessageRequest` containing independently
-encrypted submissions addressed to device UUIDs.
+## Gateway: `/v1/gateway`
 
-- `submission_id` and `device_id` are 16-byte UUIDs.
-- `message` is non-empty opaque encrypted content.
-- HTTP idempotency is carried by the `Idempotency-Key` header.
-- Failed submissions are reported individually; an empty failure list means
-  the batch was accepted.
+Open with a single-use ticket from `POST /v1/gateway/ticket`: `GET /v1/gateway?ticket=<ticket>`. Every frame is a binary `WebSocketFrame`:
 
-## Gateway frames
+| Payload | Direction | Meaning |
+|---|---|---|
+| `EnvelopeBatch` | server → client | Queued messages, oldest first. |
+| `AckMessage` | client → server | Delete these messages. |
+| `PreKeyStatus` | server → client | Advisory: one-time prekeys fell below `min_threshold` after a bundle fetch. |
 
-The WebSocket exchanges `WebSocketFrame` values:
-
-- `EnvelopeBatch`: queued encrypted messages from server to native client;
-- `AckMessage`: destructive acknowledgement from native client to server; and
-- `PreKeyStatus`: advisory one-time-prekey inventory.
-
-Unknown or malformed frames are protocol errors and MUST NOT be interpreted as
-another frame type.
+The server ignores text frames, undecodable frames, server-to-client payloads sent by a client, and malformed IDs within an ack; it logs them and keeps the connection open. It pings periodically and closes a socket that has sent nothing for the ping interval plus timeout (defaults 30 s + 10 s).
 
 ## Acknowledgement is deletion
 
-When the server accepts an envelope ID in `AckMessage`, it deletes that queued
-message. There is no server tombstone or second delivery path.
+An accepted ack deletes the message; there is no tombstone and no other way to get it back. Messages also disappear unacknowledged when they expire (default 30 days) or overflow the device's queue limit (default 1000, oldest first), and all of a device's queued messages are deleted when it uploads a new identity key.
 
 The native client therefore MUST:
 
 1. not acknowledge a decryption failure;
 2. not acknowledge deferred processing;
-3. complete durable handling before acknowledgement; and
-4. order each receive as `decrypt -> persist/handle -> optional wake -> ack`.
+3. finish durable handling first: `decrypt -> persist/handle -> optional wake -> ack`.
 
-A duplicate already present in durable native storage counts as handled and may
-be acknowledged.
+Deletion is batched and asynchronous, and the server drops acks when its per-socket buffer is full. Unacknowledged messages are redelivered on the next connection, so the client MUST deduplicate by `Envelope.id`. A duplicate already in durable storage counts as handled and may be acknowledged.
 
-## Envelope identity
-
-The server stamps both identity hints from the sender's device-scoped
-authentication:
+## Envelope fields
 
 | Field | Meaning |
 |---|---|
-| `sender_id` | Sending user UUID. |
-| `sender_device_id` | Sending device UUID used to select the inbound Signal session. |
+| `id` | 16-byte UUID; the ack and deduplication key. |
+| `timestamp` | Server receipt time, epoch milliseconds. Client-content timestamps are outside this contract. |
+| `sender_id` | Sending user UUID, stamped by the server from the sender's JWT. |
+| `sender_device_id` | Sending device UUID, likewise; selects the inbound Signal session. |
 
-Neither field is a cryptographic trust root. Successful Signal decryption
-proves possession of the selected device session. The native client MUST NOT
-guess a missing device ID or fall back to `registrationId`.
+Neither sender field is a trust root; successful Signal decryption proves the sending device. The native client:
 
-The native client derives device attribution from the Signal session that
-decrypts the message. Display names come from local trusted state, never from
-transport or encrypted payload claims.
-
-When local state already knows the owner of `sender_device_id`, native clients
-SHOULD compare it with `sender_id` and report a mismatch.
-
-## Envelope IDs and timestamps
-
-- `Envelope.id` is a 16-byte UUID and is the acknowledgement/deduplication key.
-- `Envelope.timestamp` is server-generated receipt time in epoch milliseconds.
-- Client-content timestamps are outside this transport contract.
+- MUST NOT guess a missing `sender_device_id` or fall back to `registrationId`;
+- takes display names from local trusted state, never from transport or payload claims;
+- SHOULD report a mismatch when local state already knows the owner of `sender_device_id` and it differs from `sender_id`.
 
 ## Compatibility
 
-Field numbers and wire types are stable within `obscura.v1`. Removing or
-renumbering a field is breaking. Additive fields require regenerated server,
-Kotlin, and Swift bindings before relying on them.
-
-Client-content schema and semantics are intentionally outside this repository.
+Field numbers and wire types are stable within `obscura.v1`; removing or renumbering a field is breaking. Do not rely on an added field until the server, Kotlin and Swift bindings are regenerated.
