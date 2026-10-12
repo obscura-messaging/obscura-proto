@@ -12,7 +12,7 @@ Elsewhere:
 
 - client-to-client encrypted content: [`obscura-native/protocol`](https://github.com/obscura-messaging/obscura-native/tree/main/protocol)
 - native/app facade: [`obscura-native/docs`](https://github.com/obscura-messaging/obscura-native/tree/main/docs)
-- application routing and merge rules: [`obscura-pix/docs/DOMAIN_CONTRACT.md`](https://github.com/obscura-messaging/obscura-pix/blob/main/docs/DOMAIN_CONTRACT.md)
+- application routing and merge rules: [`obscura-app/docs/DOMAIN_CONTRACT.md`](https://github.com/obscura-messaging/obscura-app/blob/main/docs/DOMAIN_CONTRACT.md)
 
 ## Changing the schema
 
