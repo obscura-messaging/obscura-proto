@@ -11,6 +11,14 @@ Body `SendMessageRequest`, response `SendMessageResponse`, both protobuf. Requir
 - Too many submissions (default limit 100) rejects the whole request with 413.
 - Otherwise failures are per submission in `failed_submissions`; an empty list means every submission was queued.
 
+### Complete delivery
+
+The server groups valid submissions by the user that owns each target device. For each such user, the targeted devices MUST equal that user's current devices, excluding the sending device when the user is the sender. Otherwise none of that user's submissions are queued: each fails with `ERROR_CODE_DEVICE_MISMATCH`, and `device_mismatches` holds one entry for that user listing the current devices that were not targeted. Targeting the sending device itself is also a mismatch. Submissions to other users in the same request are unaffected. A submission to an unknown device fails individually with `ERROR_CODE_INVALID_DEVICE` and does not affect any user's group.
+
+The check and the queueing are atomic: a device added concurrently either is part of the checked set or is added after the submissions were queued.
+
+A response is cached by `Idempotency-Key`, a mismatch included. A client that retries after a mismatch, with the device set corrected, MUST use a new `Idempotency-Key`.
+
 ## Gateway: `/v1/gateway`
 
 Open with a single-use ticket from `POST /v1/gateway/ticket`: `GET /v1/gateway?ticket=<ticket>`. Every frame is a binary `WebSocketFrame`:
