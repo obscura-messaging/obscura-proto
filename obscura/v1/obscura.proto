@@ -28,6 +28,7 @@ message SendMessageResponse {
     ERROR_CODE_MALFORMED_DEVICE_ID = 2;     // Device ID bytes are invalid (expected 16)
     ERROR_CODE_MALFORMED_SUBMISSION_ID = 3; // Submission ID bytes are invalid (expected 16)
     ERROR_CODE_MESSAGE_MISSING = 4;         // Message payload is missing
+    ERROR_CODE_DEVICE_MISMATCH = 5;         // The target user's device set is not covered exactly; see device_mismatches
   }
 
   message FailedSubmission {
@@ -36,8 +37,17 @@ message SendMessageResponse {
     string error_message = 3; // Optional human-readable context
   }
 
+  // A target user whose submissions were all rejected with ERROR_CODE_DEVICE_MISMATCH.
+  message DeviceMismatch {
+    bytes user_id = 1;                     // UUID of the target user (16 bytes)
+    repeated bytes missing_device_ids = 2; // Current devices of that user that were not targeted (16 bytes each)
+  }
+
   // If empty, all submissions in the batch were successfully queued.
   repeated FailedSubmission failed_submissions = 1;
+
+  // One entry per target user rejected for an incomplete device set.
+  repeated DeviceMismatch device_mismatches = 2;
 }
 
 // ==============================================================================
