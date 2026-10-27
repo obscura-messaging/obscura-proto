@@ -19,6 +19,8 @@ message SendMessageRequest {
   }
 
   repeated Submission messages = 1;
+  // Users whose current devices this request intends to cover, even with no submission for them (16 bytes each).
+  repeated bytes recipient_user_ids = 2;
 }
 
 message SendMessageResponse {

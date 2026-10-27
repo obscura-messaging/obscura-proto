@@ -13,7 +13,7 @@ Body `SendMessageRequest`, response `SendMessageResponse`, both protobuf. Requir
 
 ### Complete delivery
 
-The server groups valid submissions by the user that owns each target device. For each such user, the targeted devices MUST equal that user's current devices, excluding the sending device when the user is the sender. Otherwise none of that user's submissions are queued: each fails with `ERROR_CODE_DEVICE_MISMATCH`, and `device_mismatches` holds one entry for that user listing the current devices that were not targeted. Targeting the sending device itself is also a mismatch. Submissions to other users in the same request are unaffected. A submission to an unknown device fails individually with `ERROR_CODE_INVALID_DEVICE` and does not affect any user's group.
+The users checked are those listed in `recipient_user_ids` together with the owners of the targeted devices. A client lists every user it intends to reach, including its own user for messages to its other devices, so that a user whose devices it does not know yet is still checked. For each checked user, the targeted devices MUST equal that user's current devices, excluding the sending device when the user is the sender. Otherwise none of that user's submissions are queued: each fails with `ERROR_CODE_DEVICE_MISMATCH`, and `device_mismatches` holds one entry for that user listing the current devices that were not targeted. Submissions to other users in the same request are unaffected. A submission to an unknown device, or to the sending device itself, fails individually with `ERROR_CODE_INVALID_DEVICE` and does not affect any user's group.
 
 The check and the queueing are atomic: a device added concurrently either is part of the checked set or is added after the submissions were queued.
 
