@@ -8,7 +8,7 @@ Body `SendMessageRequest`, response `SendMessageResponse`, both protobuf. Requir
 
 - Each submission is encrypted separately for one target device. `submission_id` and `device_id` are 16-byte UUIDs; `message` must be non-empty.
 - `Idempotency-Key` (a UUID header) is required. A repeat within the server's idempotency TTL (default 24 h) returns the cached response.
-- Too many submissions (default limit 100) rejects the whole request with 413.
+- Too many submissions or `recipient_user_ids` (default limit 100 each) rejects the whole request with 413.
 - Otherwise failures are per submission in `failed_submissions`; an empty list means every submission was queued.
 
 ### Complete delivery
@@ -33,7 +33,7 @@ The server ignores text frames, undecodable frames, server-to-client payloads se
 
 ## Acknowledgement is deletion
 
-An accepted ack deletes the message; there is no tombstone and no other way to get it back. Messages also disappear unacknowledged when they expire (default 30 days) or overflow the device's queue limit (default 1000, oldest first), and all of a device's queued messages are deleted when it uploads a new identity key.
+An accepted ack deletes the message; there is no tombstone and no other way to get it back. Messages also disappear unacknowledged when they expire (default 30 days), overflow the device's queue limit (default 1000, oldest first), or the device is deleted (unlink or account reset).
 
 The native client therefore MUST:
 
