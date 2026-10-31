@@ -6,18 +6,21 @@ Normative for `obscura-server` and `obscura-native`. [`obscura.proto`](obscura/v
 
 Body `SendMessageRequest`, response `SendMessageResponse`, both protobuf. Requires a device-scoped JWT.
 
-- Each submission is encrypted separately for one target device. `submission_id` and `device_id` are 16-byte UUIDs; `message` must be non-empty.
-- `Idempotency-Key` (a UUID header) is required. A repeat within the server's idempotency TTL (default 24 h) returns the cached response.
-- Too many submissions or `recipient_user_ids` (default limit 100 each) rejects the whole request with 413.
-- Otherwise failures are per submission in `failed_submissions`; an empty list means every submission was queued.
+- Submissions are grouped by `Recipient` (`user_id` and `submissions`). Every `user_id` and `device_id` is a 16-byte UUID (`user_id`s and `device_id`s MUST be distinct across the request, and `device_id` MUST NOT be the sending device); `message` must be non-empty. Structural violations reject the whole request with 400.
+- `Idempotency-Key` (a UUID header) is required. A repeat from the same device within the server's idempotency TTL (default 24 h) returns the cached response.
+- Too many recipients or total submissions (default limit 100 each) rejects the whole request with 413.
 
 ### Complete delivery
 
-The users checked are those listed in `recipient_user_ids` together with the owners of the targeted devices. A client lists every user it intends to reach, including its own user for messages to its other devices, so that a user whose devices it does not know yet is still checked. For each checked user, the targeted devices MUST equal that user's current devices, excluding the sending device when the user is the sender. Otherwise none of that user's submissions are queued: each fails with `ERROR_CODE_DEVICE_MISMATCH`, and `device_mismatches` holds one entry for that user listing the current devices that were not targeted. Submissions to other users in the same request are unaffected. A submission to an unknown device, or to the sending device itself, fails individually with `ERROR_CODE_INVALID_DEVICE` and does not affect any user's group.
+A client lists every `Recipient` user it intends to reach, including its own user for messages to its other devices (`submissions` may be empty when it knows no other devices for a user). For each recipient user:
+
+- Any targeted `device_id` that does not currently belong to that `user_id` is reported in `invalid_device_ids` and is not queued.
+- The remaining targeted devices MUST cover all of that user's current devices (excluding the sending device when the user is the sender). Otherwise none of that user's submissions are queued, and `device_mismatches` holds one entry for that user listing the current devices that were not targeted.
+- Submissions to other users in the same request are unaffected. When both `invalid_device_ids` and `device_mismatches` are empty, every submission in the request was queued.
 
 The check and the queueing are atomic: a device added concurrently either is part of the checked set or is added after the submissions were queued.
 
-A response is cached by `Idempotency-Key`, a mismatch included. A client that retries after a mismatch, with the device set corrected, MUST use a new `Idempotency-Key`.
+A response is cached by `(sender_device_id, Idempotency-Key)`, a mismatch included. A client that retries after a mismatch, with the device set corrected, MUST use a new `Idempotency-Key`.
 
 ## Gateway: `/v1/gateway`
 
