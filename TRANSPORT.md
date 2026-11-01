@@ -51,15 +51,15 @@ Deletion is batched and asynchronous, and the server drops acks when its per-soc
 | Field | Meaning |
 |---|---|
 | `id` | 16-byte UUID; the ack and deduplication key. |
-| `timestamp` | Server receipt time, epoch milliseconds. Client-content timestamps are outside this contract. |
-| `sender_id` | Sending user UUID, stamped by the server from the sender's JWT. |
+| `sender_user_id` | Sending user UUID, stamped by the server from the sender's JWT. |
 | `sender_device_id` | Sending device UUID, likewise; selects the inbound Signal session. |
+| `timestamp` | Server receipt time, epoch milliseconds. Client-content timestamps are outside this contract. |
 
 Neither sender field is a trust root; successful Signal decryption proves the sending device. The native client:
 
 - MUST NOT guess a missing `sender_device_id` or fall back to `registrationId`;
 - takes display names from local trusted state, never from transport or payload claims;
-- SHOULD report a mismatch when local state already knows the owner of `sender_device_id` and it differs from `sender_id`.
+- SHOULD report a mismatch when local state already knows the owner of `sender_device_id` and it differs from `sender_user_id`.
 
 ## Compatibility
 
