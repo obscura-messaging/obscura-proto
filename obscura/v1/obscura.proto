@@ -13,31 +13,30 @@ option java_outer_classname = "ObscuraProtocol";
 
 message SendMessageRequest {
   message Submission {
-    bytes submission_id = 1; // Client-generated UUID (16 bytes)
-    bytes device_id = 2;     // UUID of the target device (16 bytes)
-    bytes message = 3;       // The encrypted message payload
+    bytes device_id = 1; // UUID of the target device (16 bytes)
+    bytes message = 2;   // The encrypted message payload
   }
 
-  repeated Submission messages = 1;
+  message Recipient {
+    bytes user_id = 1;                   // UUID of the target user (16 bytes)
+    repeated Submission submissions = 2; // May be empty to check whether the user has devices
+  }
+
+  repeated Recipient recipients = 1;
 }
 
 message SendMessageResponse {
-  enum ErrorCode {
-    ERROR_CODE_UNSPECIFIED = 0;
-    ERROR_CODE_INVALID_DEVICE = 1;          // Device not found in database
-    ERROR_CODE_MALFORMED_DEVICE_ID = 2;     // Device ID bytes are invalid (expected 16)
-    ERROR_CODE_MALFORMED_SUBMISSION_ID = 3; // Submission ID bytes are invalid (expected 16)
-    ERROR_CODE_MESSAGE_MISSING = 4;         // Message payload is missing
+  // A recipient user whose submissions were all rejected because its current device set was not covered.
+  message DeviceMismatch {
+    bytes user_id = 1;                     // UUID of the target user (16 bytes)
+    repeated bytes missing_device_ids = 2; // Current devices of that user that were not targeted (16 bytes each)
   }
 
-  message FailedSubmission {
-    bytes submission_id = 1;  // Echoed back to the client (16 bytes)
-    ErrorCode error_code = 2;
-    string error_message = 3; // Optional human-readable context
-  }
+  // Targeted device IDs that do not belong to their recipient user (unlinked or unknown; 16 bytes each).
+  repeated bytes invalid_device_ids = 1;
 
-  // If empty, all submissions in the batch were successfully queued.
-  repeated FailedSubmission failed_submissions = 1;
+  // One entry per recipient user rejected for an incomplete device set.
+  repeated DeviceMismatch device_mismatches = 2;
 }
 
 // ==============================================================================
@@ -78,21 +77,21 @@ message EnvelopeBatch {
 // Represents a message waiting in the queue for the connected device.
 // The client MUST reply with an `AckMessage` containing this message's ID.
 message Envelope {
-  bytes id = 1;         // UUID of the message (16 bytes).
+  bytes id = 1; // UUID of the message (16 bytes).
 
   // UUID of the sending USER (16 bytes), server-stamped. This is Signal's
   // Envelope.source_service_id: a routing/attribution HINT, not a trust root. The
   // recipient authenticates the sender via the Signal session (identity key), and
   // takes the display name from its own friend graph — never by trusting this
   // field or the payload. See TRANSPORT.md.
-  bytes sender_id = 2;
-
-  uint64 timestamp = 3; // Server-generated timestamp (ms) of when the message was received.
-  bytes message = 4;    // The encrypted message payload
+  bytes sender_user_id = 2;
 
   // UUID of the sending DEVICE (16 bytes), server-stamped from the sender's
   // device-scoped JWT (unforgeable). This is Signal's Envelope.source_device:
   // Signal sessions are pairwise device-to-device, so the recipient selects the
   // inbound session by this device. A successful MAC then proves the sender.
-  bytes sender_device_id = 5;
+  bytes sender_device_id = 3;
+
+  uint64 timestamp = 4; // Server-generated timestamp (ms) of when the message was received.
+  bytes message = 5;    // The encrypted message payload
 }
