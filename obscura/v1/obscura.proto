@@ -46,12 +46,13 @@ message SendMessageResponse {
 
 // The top-level frame exchanged over the WebSocket connection.
 message WebSocketFrame {
+  // 12 was a low pre-key notice. Clients now check their own supply with `GET /v1/keys`, as Signal clients do.
+  reserved 12;
+  reserved "pre_key_status";
+
   oneof payload {
     // Client -> Server: Acknowledge receipt of a message and triggers server-side deletion.
     AckMessage ack = 11;
-
-    // Server -> Client: Notification that one-time EC or Kyber pre-keys are running low.
-    PreKeyStatus pre_key_status = 12;
 
     // Server -> Client: Batch of messages delivered in a single frame.
     EnvelopeBatch envelope_batch = 13;
@@ -61,13 +62,6 @@ message WebSocketFrame {
 // Sent by client to confirm processing. Server deletes the message upon receipt.
 message AckMessage {
   repeated bytes message_ids = 1; // UUIDs of the messages to acknowledge (16 bytes each).
-}
-
-// Sent when either one-time pool is below `min_threshold`; the client refills both.
-message PreKeyStatus {
-  int32 one_time_pre_key_count = 1;       // One-time EC (X25519) pre-keys left.
-  int32 min_threshold = 2;                // The server's configured threshold.
-  int32 one_time_kyber_pre_key_count = 3; // One-time Kyber pre-keys left.
 }
 
 // A batch of envelopes for bulk message delivery over WebSocket.
