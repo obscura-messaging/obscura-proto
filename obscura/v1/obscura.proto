@@ -46,12 +46,13 @@ message SendMessageResponse {
 
 // The top-level frame exchanged over the WebSocket connection.
 message WebSocketFrame {
+  // 12 was a low pre-key notice. Clients now check their own supply with `GET /v1/keys`, as Signal clients do.
+  reserved 12;
+  reserved "pre_key_status";
+
   oneof payload {
     // Client -> Server: Acknowledge receipt of a message and triggers server-side deletion.
     AckMessage ack = 11;
-
-    // Server -> Client: Notification that one-time pre-keys are running low.
-    PreKeyStatus pre_key_status = 12;
 
     // Server -> Client: Batch of messages delivered in a single frame.
     EnvelopeBatch envelope_batch = 13;
@@ -61,11 +62,6 @@ message WebSocketFrame {
 // Sent by client to confirm processing. Server deletes the message upon receipt.
 message AckMessage {
   repeated bytes message_ids = 1; // UUIDs of the messages to acknowledge (16 bytes each).
-}
-
-message PreKeyStatus {
-  int32 one_time_pre_key_count = 1;
-  int32 min_threshold = 2; // The server's configured threshold
 }
 
 // A batch of envelopes for bulk message delivery over WebSocket.

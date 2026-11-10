@@ -30,7 +30,6 @@ Open with a single-use ticket from `POST /v1/gateway/ticket`: `GET /v1/gateway?t
 |---|---|---|
 | `EnvelopeBatch` | server → client | Queued messages, oldest first. |
 | `AckMessage` | client → server | Delete these messages. |
-| `PreKeyStatus` | server → client | Advisory: one-time prekeys fell below `min_threshold` after a bundle fetch. |
 
 The server ignores text frames, undecodable frames, server-to-client payloads sent by a client, and malformed IDs within an ack; it logs them and keeps the connection open. It pings periodically and closes a socket that has sent nothing for the ping interval plus timeout (defaults 30 s + 10 s).
 
