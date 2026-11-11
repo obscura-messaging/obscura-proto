@@ -2,9 +2,6 @@ syntax = "proto3";
 
 package obscura.v1;
 
-option java_package = "xyz.obscura.server.contracts";
-option java_outer_classname = "ObscuraProtocol";
-
 // ==============================================================================
 // REST API Payloads (Upstream)
 // Endpoint: POST /v1/messages
