@@ -1,6 +1,6 @@
 # Obscura transport protocol
 
-The Protocol Buffer schema shared by [`obscura-server`](https://github.com/obscura-messaging/obscura-server) and [`obscura-native`](https://github.com/obscura-messaging/obscura-native), both of which pin this repository as the `proto` submodule and generate their own code from it. The server routes encrypted bytes and never parses the client content inside them.
+The Protocol Buffer schema shared by [`obscura-server`](https://github.com/obscura-messaging/obscura-server) and the Kotlin and Swift kits in [`obscura-app`](https://github.com/obscura-messaging/obscura-app). Both pin this repository as a submodule (`proto/` in the server, `server-proto/` in the app) and generate their own code from it. The server routes encrypted bytes and never parses the client content inside them.
 
 | File | Purpose |
 |---|---|
@@ -10,8 +10,8 @@ The Protocol Buffer schema shared by [`obscura-server`](https://github.com/obscu
 
 Elsewhere:
 
-- client-to-client encrypted content: [`obscura-native/protocol`](https://github.com/obscura-messaging/obscura-native/tree/main/protocol)
-- native/app facade: [`obscura-native/docs`](https://github.com/obscura-messaging/obscura-native/tree/main/docs)
+- client-to-client encrypted content: [`obscura-app/client-protocol`](https://github.com/obscura-messaging/obscura-app/tree/main/client-protocol)
+- kit behaviour contract: [`obscura-app/docs/KIT_API.md`](https://github.com/obscura-messaging/obscura-app/blob/main/docs/KIT_API.md)
 - application routing and merge rules: [`obscura-app/docs/DOMAIN_CONTRACT.md`](https://github.com/obscura-messaging/obscura-app/blob/main/docs/DOMAIN_CONTRACT.md)
 
 ## Changing the schema

@@ -1,6 +1,6 @@
 # Transport contract
 
-Normative for `obscura-server` and `obscura-native`. [`obscura.proto`](obscura/v1/obscura.proto) defines the shapes; this file defines behaviour. The server queues, routes, timestamps and deletes encrypted client bytes, and MUST NOT parse their content. REST details are in the server's `openapi.yaml`.
+Normative for `obscura-server` and the kits in `obscura-app`. [`obscura.proto`](obscura/v1/obscura.proto) defines the shapes; this file defines behaviour. The server queues, routes, timestamps and deletes encrypted client bytes, and MUST NOT parse their content. REST details are in the server's `openapi.yaml`.
 
 ## Sending: `POST /v1/messages`
 
