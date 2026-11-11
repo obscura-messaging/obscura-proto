@@ -39,7 +39,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check transport compatibility
         # Scope the comparison to the artifact this repository owns. The
-        # historical client package moved to obscura-native.
+        # client-to-client protocol lives in obscura-app's client-protocol/.
         run: >-
           buf breaking
           --against 'https://github.com/${{ github.repository }}.git#branch=main'
